@@ -1,3 +1,6 @@
+[![Evolution](https://github.com/dweng0/Pyken/actions/workflows/evolve.yml/badge.svg)](https://github.com/dweng0/Pyken/actions/workflows/evolve.yml)
+[![BAADD](baadd.svg)](https://github.com/dweng0/BAADD)
+
 # Pyken
 
 A token stream transformer. Pyken takes a JSON token stream — from [PyLex](https://github.com/dweng0/PyLex) or any compatible tokenizer — and remaps tokens according to a YAML mapping file, enabling token-level transpilation between languages or dialects.
