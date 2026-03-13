@@ -33,6 +33,23 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Then the exit code is non-zero
             And an error message describing the JSON parse failure is printed to stderr
 
+        Scenario: Input file not found exits with a clear error
+            Given I run pyken.py with --input pointing to a file that does not exist
+            Then the exit code is non-zero
+            And an error message mentioning the missing input file is printed to stderr
+
+        Scenario: Token stream that is valid JSON but not an array exits with a clear error
+            Given stdin contains valid JSON that is not an array
+            When I run pyken.py with a mapping file
+            Then the exit code is non-zero
+            And an error message stating that the token stream must be a JSON array is printed to stderr
+
+        Scenario: Empty token stream produces empty output
+            Given stdin contains an empty JSON array
+            When I run pyken.py with a mapping file
+            Then the exit code is zero
+            And stdout is empty
+
     Feature: Apply token mapping
         As a developer
         I want tokens to be remapped according to a YAML mapping file
@@ -63,6 +80,12 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Then the exit code is non-zero
             And an error message identifies the unmapped token
 
+        Scenario: Discarded token does not trigger strict mode failure
+            Given a token stream containing a token that matches an emit: discard rule
+            When I run pyken.py with --strict
+            Then the exit code is zero
+            And no error is printed for the discarded token
+
     Feature: Output modes
         As a developer
         I want to choose between source text and token stream output
@@ -81,6 +104,11 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When I run pyken.py with --tokens
             Then stdout is a valid JSON array of tokens
             And each token has a "type" and "value" field
+
+        Scenario: Token stream output from one invocation is valid input to another
+            Given a token stream and a mapping file
+            When I run pyken.py with --tokens and pipe the output into a second pyken.py invocation with another mapping file
+            Then the final output reflects both mappings applied in sequence
 
     Feature: Mapping configuration
         As a developer
@@ -101,6 +129,11 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Given a mapping file with a rule for type "keyword" value "def" and a rule for type "keyword"
             When a token with type "keyword" and value "def" is processed
             Then the more specific rule (type + value) is applied
+
+        Scenario: Map a token by value only regardless of type
+            Given a mapping file with a rule matching only value ";"
+            When any token with value ";" is processed regardless of its type
+            Then the rule is applied to that token
 
     Feature: Bundled mappings
         As a developer
@@ -179,6 +212,18 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When ":" appears not preceded by ")"
             Then the pass-through rule is applied and the token is unchanged
 
+        Scenario: preceded_by does not match when the token is first in the stream
+            Given a token stream where the first token would match a preceded_by rule if it had a predecessor
+            When I run pyken.py
+            Then the preceded_by rule is not applied to the first token
+            And the next applicable rule is used instead
+
+        Scenario: preceded_by and followed_by can be combined in a single rule
+            Given a mapping rule with both preceded_by and followed_by conditions
+            When a token matches both the preceding and following token conditions
+            Then that rule is applied
+            And the rule is not applied when only one condition is satisfied
+
     Feature: Sequence matching
         As a developer
         I want to match a run of consecutive tokens as a single pattern
@@ -208,6 +253,12 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When "not" appears without being followed by whitespace and "in"
             Then the single-token rule is applied
 
+        Scenario: Sequence rule does not match when the stream ends before the sequence is complete
+            Given a token stream that ends with the first token of a sequence pattern
+            And a mapping with a sequence rule for that pattern and a single-token rule for the first token
+            When I run pyken.py
+            Then the single-token rule is applied to the trailing token
+
     Feature: Token injection
         As a developer
         I want to inject new tokens before or after a matched token while keeping the original
@@ -230,6 +281,11 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When I run pyken.py with --tokens
             Then the output JSON array contains the injected tokens in the correct position relative to the original token
 
+        Scenario: Injection can be combined with token value replacement
+            Given a mapping rule that replaces the matched token's value and also injects tokens before it
+            When I run pyken.py
+            Then the output contains the injected tokens followed by the replaced token value
+
     Feature: Lookahead context matching
         As a developer
         I want to match a token based on the token that immediately follows it
@@ -250,6 +306,29 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Given a mapping with a followed_by rule for "{" followed by newline and a pass-through rule for "{"
             When "{" appears not followed by a newline
             Then the pass-through rule is applied and the token is unchanged
+
+    Feature: Mapping file validation
+        As a developer
+        I want clear errors when my mapping file has structural problems
+        So that I can fix authoring mistakes quickly instead of getting silent misbehaviour
+
+        Scenario: Rule with an unknown emit mode exits with a clear error
+            Given a mapping file containing a rule with an unrecognised emit mode
+            When I run pyken.py with that mapping file
+            Then the exit code is non-zero
+            And an error message identifying the invalid emit mode is printed to stderr
+
+        Scenario: Rule missing a match block is skipped with a warning
+            Given a mapping file containing a rule with no match block
+            When I run pyken.py with that mapping file
+            Then pyken continues processing
+            And a warning identifying the malformed rule is printed to stderr
+
+        Scenario: Mapping file with no rules key processes all tokens as unmapped
+            Given a mapping file that contains valid YAML but no rules key
+            When I run pyken.py without --strict
+            Then all tokens pass through unchanged
+            And a warning is printed for each token
 
     Feature: CLI error handling
         As a developer
