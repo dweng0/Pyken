@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 18 scenario(s) across 7 test file(s).
+Checked 25 scenario(s) across 7 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -33,6 +33,22 @@ Checked 18 scenario(s) across 7 test file(s).
 - [x] JavaScript-to-TypeScript mapping passes through valid tokens
 - [x] Python-to-pseudocode mapping replaces keywords with plain English
 
+## Feature: Discard tokens
+
+- [ ] UNCOVERED: Discard emit removes the token from output
+- [ ] UNCOVERED: Discarded token does not appear in token stream output
+
+## Feature: Multi-token emission
+
+- [ ] UNCOVERED: A single matched token emits multiple tokens in token stream output
+- [ ] UNCOVERED: Multi-token emission appears correctly in reconstructed source text
+
+## Feature: Context-aware matching
+
+- [ ] UNCOVERED: A token is matched by type, value, and preceding token type and value
+- [ ] UNCOVERED: Context-aware rules take priority over context-free rules for the same token
+- [ ] UNCOVERED: Context-free rule applies when context does not match
+
 ## Feature: CLI error handling
 
 - [x] Missing mapping file argument prints usage and exits non-zero
@@ -40,4 +56,13 @@ Checked 18 scenario(s) across 7 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**18/18 scenarios covered.**
+**18/25 scenarios covered.**
+
+7 scenario(s) need tests:
+- Discard emit removes the token from output
+- Discarded token does not appear in token stream output
+- A single matched token emits multiple tokens in token stream output
+- Multi-token emission appears correctly in reconstructed source text
+- A token is matched by type, value, and preceding token type and value
+- Context-aware rules take priority over context-free rules for the same token
+- Context-free rule applies when context does not match

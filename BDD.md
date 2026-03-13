@@ -125,6 +125,60 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When I run pyken.py with the bundled mapping
             Then keywords are replaced with plain English equivalents
 
+    Feature: Discard tokens
+        As a developer
+        I want to drop specific tokens from the output entirely
+        So that I can remove source language constructs that have no equivalent in the target language
+
+        Scenario: Discard emit removes the token from output
+            Given a token stream containing a token with type "punctuation" and value ":"
+            And a mapping rule that matches that token with emit: discard
+            When I run pyken.py
+            Then the output does not contain ":"
+            And no warning is printed for the discarded token
+
+        Scenario: Discarded token does not appear in token stream output
+            Given a token stream containing a token with emit: discard in the mapping
+            When I run pyken.py with --tokens
+            Then the discarded token does not appear in the output JSON array
+
+    Feature: Multi-token emission
+        As a developer
+        I want a single matched token to expand into multiple output tokens
+        So that I can represent source constructs that require more tokens in the target language
+
+        Scenario: A single matched token emits multiple tokens in token stream output
+            Given a token stream containing a token with type "indent"
+            And a mapping rule that emits two tokens: a punctuation "{" and a newline
+            When I run pyken.py with --tokens
+            Then the output JSON array contains two tokens where the original single token was
+
+        Scenario: Multi-token emission appears correctly in reconstructed source text
+            Given a single matched token that emits multiple tokens via a mapping rule
+            When I run pyken.py without --tokens
+            Then the reconstructed source text contains the values of all emitted tokens in order
+
+    Feature: Context-aware matching
+        As a developer
+        I want to match tokens based on the token immediately before them
+        So that I can apply different rules to the same token type and value depending on context
+
+        Scenario: A token is matched by type, value, and preceding token type and value
+            Given a token ":" of type "punctuation" immediately preceded by a ")" of type "punctuation"
+            And a mapping rule that matches type "punctuation" value ":" with preceded_by type "punctuation" value ")"
+            When I run pyken.py
+            Then the context-aware rule is applied to that token
+
+        Scenario: Context-aware rules take priority over context-free rules for the same token
+            Given a mapping with a context-aware rule and a general rule both matching the same token type and value
+            When the token appears in the context that satisfies the context-aware rule
+            Then the context-aware rule is applied rather than the general rule
+
+        Scenario: Context-free rule applies when context does not match
+            Given a mapping with a context-aware rule for ":" preceded by ")" and a pass-through rule for ":"
+            When ":" appears not preceded by ")"
+            Then the pass-through rule is applied and the token is unchanged
+
     Feature: CLI error handling
         As a developer
         I want clear error messages when I misuse Pyken

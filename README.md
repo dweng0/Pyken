@@ -149,6 +149,110 @@ rules:
 
 ---
 
+### Emit modes
+
+#### `emit: pass` — keep the token unchanged
+
+```yaml
+- match:
+    type: identifier
+  emit: pass
+```
+
+#### `emit: discard` — remove the token entirely
+
+Use this to drop tokens that have no equivalent in the target language.
+
+```yaml
+# Remove Python's trailing colon from block statements
+- match:
+    type: punctuation
+    value: ":"
+  emit: discard
+```
+
+The token is silently removed from the output. No warning is printed.
+
+#### Replace value and/or type
+
+```yaml
+- match:
+    type: keyword
+    value: "def"
+  emit:
+    value: "function"       # replace value, keep type
+
+- match:
+    type: keyword
+    value: "True"
+  emit:
+    type: boolean           # replace type, keep value
+
+- match:
+    type: keyword
+    value: "None"
+  emit:
+    type: keyword
+    value: "null"           # replace both
+```
+
+#### `emit: tokens` — expand one token into many
+
+Use this when a single source token maps to multiple target tokens. The matched token is replaced by the full list.
+
+```yaml
+# Python INDENT becomes "{\n" in JavaScript
+- match:
+    type: indent
+  emit:
+    tokens:
+      - type: punctuation
+        value: " {"
+      - type: newline
+        value: "\n"
+
+# Python DEDENT becomes a closing brace
+- match:
+    type: dedent
+  emit:
+    tokens:
+      - type: punctuation
+        value: "}"
+      - type: newline
+        value: "\n"
+```
+
+---
+
+### Context-aware matching
+
+Add `preceded_by` to a rule to match a token only when a specific token immediately precedes it. This lets you apply different rules to the same token type and value depending on where it appears.
+
+```yaml
+# Remove ":" only when it closes a block header (preceded by ")")
+# Leaves ":" in dict literals alone
+- match:
+    type: punctuation
+    value: ":"
+    preceded_by:
+      type: punctuation
+      value: ")"
+  emit: discard
+
+# All other ":" (e.g. in dicts) pass through unchanged
+- match:
+    type: punctuation
+    value: ":"
+  emit: pass
+```
+
+**Rule priority** (highest to lowest):
+1. Context-aware rules (type + value + `preceded_by`) — most specific
+2. Specific rules (type + value)
+3. General rules (type only)
+
+---
+
 ## Running Tests
 
 ```bash
@@ -177,7 +281,9 @@ Because Pyken only cares about the `{type, value}` contract, it works with PyLex
 | Token-level remapping | Remap keyword values and types via YAML | Done |
 | Bundled language mappings | Python→JS, JS→TS, Python→Pseudocode | Done |
 | Pipeline chaining | `--tokens` output for multi-step transforms | Done |
-| Structural transforms | Indentation→braces, colon removal, etc. | Planned |
+| Discard tokens | `emit: discard` to drop tokens with no target equivalent | In progress |
+| Multi-token emission | One source token expands to multiple target tokens | In progress |
+| Context-aware matching | `preceded_by` to disambiguate same token in different contexts | In progress |
 | Custom output language | Define a new language target from scratch | Planned |
 
 ---
