@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 25 scenario(s) across 7 test file(s).
+Checked 35 scenario(s) across 7 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -49,6 +49,25 @@ Checked 25 scenario(s) across 7 test file(s).
 - [ ] UNCOVERED: Context-aware rules take priority over context-free rules for the same token
 - [ ] UNCOVERED: Context-free rule applies when context does not match
 
+## Feature: Sequence matching
+
+- [ ] UNCOVERED: A sequence of tokens is matched and emitted as a single token
+- [ ] UNCOVERED: A sequence of tokens is matched and discarded entirely
+- [ ] UNCOVERED: A sequence rule takes priority over a single-token rule for the first token in the sequence
+- [ ] UNCOVERED: Single-token rule applies when sequence context is not present
+
+## Feature: Token injection
+
+- [ ] UNCOVERED: Tokens are injected after a matched token without replacing it
+- [ ] UNCOVERED: Tokens are injected before a matched token without replacing it
+- [ ] UNCOVERED: Injection appears correctly in token stream output
+
+## Feature: Lookahead context matching
+
+- [ ] UNCOVERED: A token is matched by type, value, and following token type and value
+- [ ] UNCOVERED: Lookahead rules take priority over context-free rules for the same token
+- [ ] UNCOVERED: Context-free rule applies when lookahead context does not match
+
 ## Feature: CLI error handling
 
 - [x] Missing mapping file argument prints usage and exits non-zero
@@ -56,9 +75,9 @@ Checked 25 scenario(s) across 7 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**18/25 scenarios covered.**
+**18/35 scenarios covered.**
 
-7 scenario(s) need tests:
+17 scenario(s) need tests:
 - Discard emit removes the token from output
 - Discarded token does not appear in token stream output
 - A single matched token emits multiple tokens in token stream output
@@ -66,3 +85,13 @@ Checked 25 scenario(s) across 7 test file(s).
 - A token is matched by type, value, and preceding token type and value
 - Context-aware rules take priority over context-free rules for the same token
 - Context-free rule applies when context does not match
+- A sequence of tokens is matched and emitted as a single token
+- A sequence of tokens is matched and discarded entirely
+- A sequence rule takes priority over a single-token rule for the first token in the sequence
+- Single-token rule applies when sequence context is not present
+- Tokens are injected after a matched token without replacing it
+- Tokens are injected before a matched token without replacing it
+- Injection appears correctly in token stream output
+- A token is matched by type, value, and following token type and value
+- Lookahead rules take priority over context-free rules for the same token
+- Context-free rule applies when lookahead context does not match

@@ -226,7 +226,9 @@ Use this when a single source token maps to multiple target tokens. The matched 
 
 ### Context-aware matching
 
-Add `preceded_by` to a rule to match a token only when a specific token immediately precedes it. This lets you apply different rules to the same token type and value depending on where it appears.
+#### `preceded_by` — lookbehind
+
+Add `preceded_by` to a rule to match a token only when a specific token immediately precedes it.
 
 ```yaml
 # Remove ":" only when it closes a block header (preceded by ")")
@@ -246,10 +248,138 @@ Add `preceded_by` to a rule to match a token only when a specific token immediat
   emit: pass
 ```
 
-**Rule priority** (highest to lowest):
-1. Context-aware rules (type + value + `preceded_by`) — most specific
-2. Specific rules (type + value)
-3. General rules (type only)
+#### `followed_by` — lookahead
+
+Add `followed_by` to match a token only when a specific token immediately follows it. Useful for disambiguating structural tokens such as `{` used as a block opener vs `{` used to open an object literal.
+
+```yaml
+# Rust/JS "{" that opens a block (followed by newline) → discard it,
+# let INDENT/DEDENT handling generate the Python-style indentation
+- match:
+    type: punctuator
+    value: "{"
+    followed_by:
+      type: newline
+  emit: discard
+
+# "{" not followed by newline (object literal) → pass through unchanged
+- match:
+    type: punctuator
+    value: "{"
+  emit: pass
+```
+
+`preceded_by` and `followed_by` can be combined in a single rule:
+
+```yaml
+- match:
+    type: punctuation
+    value: ","
+    preceded_by:
+      type: identifier
+    followed_by:
+      type: whitespace
+  emit: pass
+```
+
+---
+
+### Sequence matching
+
+Use `match: sequence` to match a run of consecutive tokens as a single pattern. This is necessary for multi-token constructs that have a single-token equivalent in the target language — for example `not in` (three tokens) → a single operator, or `: i32` (a Rust type annotation) → discard both tokens at once.
+
+The sequence must list every token in order. Use `type` and/or `value` per token; omit either to match any value/type for that position.
+
+```yaml
+# Python "not in" (three tokens) → single operator token
+- match:
+    sequence:
+      - type: keyword
+        value: "not"
+      - type: whitespace
+      - type: keyword
+        value: "in"
+  emit:
+    type: operator
+    value: "not in"
+
+# Rust type annotation ": i32" → discard both tokens
+- match:
+    sequence:
+      - type: punctuation
+        value: ":"
+      - type: identifier          # matches any type name
+  emit: discard
+
+# Rust "let mut" → discard both (Python just assigns directly)
+- match:
+    sequence:
+      - type: keyword
+        value: "let"
+      - type: whitespace
+      - type: keyword
+        value: "mut"
+  emit: discard
+```
+
+A sequence rule consumes all matched tokens and produces the emitted output once. All `emit` modes work with sequence rules: `pass` (emits the first token unchanged), `discard`, value/type replace, `tokens: [...]`, and injection.
+
+---
+
+### Token injection
+
+Use `emit: before` or `emit: after` to inject new tokens adjacent to the matched token **without replacing it**. This is how you add target-language constructs that have no source equivalent — for instance, adding TypeScript type annotations to parameters, or prepending a C++ return type before a function name.
+
+`pass_through: true` keeps the matched token in the output. Omitting it, or setting it to `false`, replaces the matched token (same as the standard emit).
+
+```yaml
+# JavaScript → TypeScript: inject ": any" after each function parameter
+# The parameter identifier is kept; the annotation is added after it
+- match:
+    type: identifier
+    preceded_by:
+      type: punctuator
+      value: "("
+  emit:
+    pass_through: true
+    after:
+      - type: punctuator
+        value: ":"
+      - type: whitespace
+        value: " "
+      - type: identifier
+        value: "any"
+
+# Python → C++: inject return type "int " before a function name
+- match:
+    type: identifier
+    preceded_by:
+      type: keyword
+      value: "def"
+  emit:
+    pass_through: true
+    before:
+      - type: identifier
+        value: "int"
+      - type: whitespace
+        value: " "
+```
+
+`before` and `after` can be used together in one rule. The output order is always: `before` tokens → matched token (if `pass_through: true`) → `after` tokens.
+
+---
+
+### Rule priority (complete)
+
+Rules are tried in this order — the first match wins:
+
+| Priority | Rule type | When it applies |
+|---|---|---|
+| 1 | Sequence rule | `match: sequence: [...]` — matches multiple tokens |
+| 2 | Context-aware + specific | type + value + `preceded_by` and/or `followed_by` |
+| 3 | Context-aware + general | type only + `preceded_by` and/or `followed_by` |
+| 4 | Specific | type + value |
+| 5 | General | type only |
 
 ---
 
@@ -266,8 +396,8 @@ python3 -m pytest tests/ -v
 Pyken is intentionally minimal. The core pipeline is:
 
 1. Read a `[{"type": "...", "value": "..."}]` JSON array from stdin or a file
-2. For each token, find the best matching rule in the mapping YAML (specific before general)
-3. Apply the `emit` transformation to produce a new token
+2. For each position in the stream, find the best matching rule (sequence rules first, then context-aware, then specific, then general)
+3. Apply the `emit` transformation — replace, discard, expand to many tokens, or inject before/after
 4. Output either the reconstructed source text (join all values) or a new JSON token stream
 
 Because Pyken only cares about the `{type, value}` contract, it works with PyLex or any other tokenizer that produces compatible output.
@@ -283,7 +413,9 @@ Because Pyken only cares about the `{type, value}` contract, it works with PyLex
 | Pipeline chaining | `--tokens` output for multi-step transforms | Done |
 | Discard tokens | `emit: discard` to drop tokens with no target equivalent | In progress |
 | Multi-token emission | One source token expands to multiple target tokens | In progress |
-| Context-aware matching | `preceded_by` to disambiguate same token in different contexts | In progress |
+| Context-aware matching | `preceded_by` / `followed_by` to disambiguate by context | In progress |
+| Sequence matching | Match N consecutive tokens as a pattern, emit as one | In progress |
+| Token injection | `emit: before` / `emit: after` to add tokens without removing the original | In progress |
 | Custom output language | Define a new language target from scratch | Planned |
 
 ---

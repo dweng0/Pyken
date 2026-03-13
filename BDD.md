@@ -179,6 +179,78 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When ":" appears not preceded by ")"
             Then the pass-through rule is applied and the token is unchanged
 
+    Feature: Sequence matching
+        As a developer
+        I want to match a run of consecutive tokens as a single pattern
+        So that I can remap multi-token constructs that have no single-token equivalent in the target language
+
+        Scenario: A sequence of tokens is matched and emitted as a single token
+            Given a token stream containing "not" followed by whitespace followed by "in"
+            And a mapping rule with a sequence match for those three tokens that emits a single operator token "not in"
+            When I run pyken.py
+            Then the output contains "not in" as a single unit
+            And the original three tokens do not appear separately in the output
+
+        Scenario: A sequence of tokens is matched and discarded entirely
+            Given a token stream containing ":" followed by an identifier representing a type annotation
+            And a mapping rule with a sequence match for those two tokens that emits discard
+            When I run pyken.py
+            Then neither token appears in the output
+            And no warning is printed for the discarded sequence
+
+        Scenario: A sequence rule takes priority over a single-token rule for the first token in the sequence
+            Given a mapping with a sequence rule starting with "not" and a single-token rule also matching "not"
+            When the token "not" appears followed by the rest of the sequence
+            Then the sequence rule is applied rather than the single-token rule
+
+        Scenario: Single-token rule applies when sequence context is not present
+            Given a mapping with a sequence rule for "not" followed by "in" and a single-token rule for "not"
+            When "not" appears without being followed by whitespace and "in"
+            Then the single-token rule is applied
+
+    Feature: Token injection
+        As a developer
+        I want to inject new tokens before or after a matched token while keeping the original
+        So that I can add target-language constructs that have no source-language equivalent
+
+        Scenario: Tokens are injected after a matched token without replacing it
+            Given a token stream containing an identifier preceded by "("
+            And a mapping rule that matches that identifier and injects ": any" tokens after it
+            When I run pyken.py
+            Then the output contains the original identifier immediately followed by the injected tokens
+
+        Scenario: Tokens are injected before a matched token without replacing it
+            Given a token stream containing a keyword
+            And a mapping rule that injects tokens before that keyword
+            When I run pyken.py
+            Then the output contains the injected tokens immediately before the original keyword
+
+        Scenario: Injection appears correctly in token stream output
+            Given a mapping rule that injects tokens after a matched token
+            When I run pyken.py with --tokens
+            Then the output JSON array contains the injected tokens in the correct position relative to the original token
+
+    Feature: Lookahead context matching
+        As a developer
+        I want to match a token based on the token that immediately follows it
+        So that I can apply different rules to the same token depending on what comes after it
+
+        Scenario: A token is matched by type, value, and following token type and value
+            Given a token "{" of type "punctuator" immediately followed by a newline token
+            And a mapping rule that matches type "punctuator" value "{" with followed_by type "newline"
+            When I run pyken.py
+            Then the followed_by rule is applied to that token
+
+        Scenario: Lookahead rules take priority over context-free rules for the same token
+            Given a mapping with a followed_by rule and a general rule both matching the same token
+            When the token appears followed by the token specified in followed_by
+            Then the followed_by rule is applied rather than the general rule
+
+        Scenario: Context-free rule applies when lookahead context does not match
+            Given a mapping with a followed_by rule for "{" followed by newline and a pass-through rule for "{"
+            When "{" appears not followed by a newline
+            Then the pass-through rule is applied and the token is unchanged
+
     Feature: CLI error handling
         As a developer
         I want clear error messages when I misuse Pyken
