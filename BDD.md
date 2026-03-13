@@ -259,6 +259,17 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             When I run pyken.py
             Then the single-token rule is applied to the trailing token
 
+        Scenario: pass_through on a sequence rule keeps all matched tokens and injects around them
+            Given a mapping rule that matches a sequence of tokens with pass_through true and injects tokens before the sequence
+            When I run pyken.py
+            Then the output contains the injected tokens followed by all original sequence tokens unchanged
+
+        Scenario: followed_by on a sequence rule checks the token after the last element of the sequence
+            Given a mapping rule with a sequence and a followed_by condition
+            When the sequence is present and the token immediately after the last sequence element matches the followed_by condition
+            Then the sequence rule is applied
+            And the rule is not applied when the token after the last sequence element does not match
+
     Feature: Token injection
         As a developer
         I want to inject new tokens before or after a matched token while keeping the original
@@ -306,6 +317,63 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Given a mapping with a followed_by rule for "{" followed by newline and a pass-through rule for "{"
             When "{" appears not followed by a newline
             Then the pass-through rule is applied and the token is unchanged
+
+    Feature: Negative context matching
+        As a developer
+        I want to match a token only when it is NOT preceded or followed by a specific token
+        So that I can distinguish tokens that look identical but mean different things in context
+
+        Scenario: not_followed_by prevents a rule matching when the excluded token follows
+            Given a mapping rule for operator "=" with not_followed_by operator "="
+            And a token stream containing "==" as two separate "=" tokens
+            When I run pyken.py
+            Then the rule is not applied to either "=" token in the "==" pair
+
+        Scenario: not_followed_by rule matches when the excluded token is absent
+            Given a mapping rule for operator "=" with not_followed_by operator "="
+            And a token stream containing a standalone "=" assignment operator
+            When I run pyken.py
+            Then the rule is applied to the "=" token
+
+        Scenario: not_preceded_by prevents a rule matching when the excluded token precedes
+            Given a mapping rule for a token with not_preceded_by specifying a token type and value
+            When that token appears immediately after the excluded token
+            Then the rule is not applied
+
+        Scenario: not_preceded_by and not_followed_by can be combined in a single rule
+            Given a mapping rule with both not_preceded_by and not_followed_by conditions
+            When a token satisfies neither exclusion condition
+            Then the rule is applied
+            And the rule is not applied when either exclusion condition is triggered
+
+    Feature: Value transforms in emit
+        As a developer
+        I want to derive the emitted token's value from the matched token's original value
+        So that I can perform structural transforms like import-to-include without hardcoding every possible value
+
+        Scenario: Emit value interpolates the matched token's original value
+            Given a mapping rule whose emit value contains the placeholder {{value}}
+            And a token with value "os"
+            When I run pyken.py
+            Then the output contains the emitted value with {{value}} replaced by "os"
+
+        Scenario: Emit value interpolates a specific token's value from a matched sequence
+            Given a mapping rule that matches a sequence and whose emit value references {{tokens[2].value}}
+            And a token stream where the third token in the sequence has value "stdio"
+            When I run pyken.py
+            Then the output contains the emitted value with {{tokens[2].value}} replaced by "stdio"
+
+        Scenario: Emit value_regex applies a substitution pattern to the original token value
+            Given a mapping rule with a value_regex pattern that matches leading single-quotes and replaces them with double-quotes
+            And a token with value "'hello'"
+            When I run pyken.py
+            Then the output token value is "\"hello\""
+
+        Scenario: value_regex with no match leaves the token value unchanged
+            Given a mapping rule with a value_regex pattern
+            And a token whose value does not match the regex pattern
+            When I run pyken.py
+            Then the token value is passed through unchanged
 
     Feature: Mapping file validation
         As a developer

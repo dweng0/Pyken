@@ -369,6 +369,115 @@ Use `emit: before` or `emit: after` to inject new tokens adjacent to the matched
 
 ---
 
+#### `pass_through: true` on a sequence rule
+
+When `pass_through: true` is set on a sequence rule, all matched tokens are kept in the output and the `before`/`after` tokens are injected around them. Without it, the sequence is consumed and replaced.
+
+```yaml
+# Python → Rust: inject "let " before every "identifier =" assignment
+# Keeps the identifier and "=" unchanged, just adds "let " in front
+- match:
+    sequence:
+      - type: identifier
+      - type: whitespace
+      - { type: operator, value: "=" }
+    followed_by:
+      not: { type: operator, value: "=" }
+  emit:
+    pass_through: true
+    before:
+      - type: keyword
+        value: "let "
+```
+
+`followed_by` on a sequence rule checks the token immediately after the **last** element of the sequence.
+
+---
+
+### Negative context matching
+
+Add `not_followed_by` or `not_preceded_by` to exclude a rule when a specific token is adjacent. Essential for distinguishing tokens that are identical in isolation but mean different things in context — for example `=` assignment vs the first character of `==`.
+
+```yaml
+# Match "=" as assignment only — not when followed by another "="
+- match:
+    type: operator
+    value: "="
+    not_followed_by:
+      type: operator
+      value: "="
+  emit:
+    pass_through: true
+    before:
+      - type: keyword
+        value: "let "
+
+# Match standalone "->" return type arrow, not inside a string
+- match:
+    type: operator
+    value: "->"
+    not_preceded_by:
+      type: string_literal
+  emit:
+    value: ":"
+```
+
+`not_preceded_by` and `not_followed_by` can be combined with each other and with `preceded_by` / `followed_by` in the same rule.
+
+---
+
+### Value transforms in emit
+
+By default `emit: value: "something"` replaces the token's value with a hardcoded string. Two additional forms let you derive the emitted value from the original token.
+
+#### `{{value}}` — interpolate the matched token's value
+
+Use `{{value}}` anywhere in the emit value string to insert the original token's value. For sequence rules, use `{{tokens[N].value}}` to reference the Nth token in the matched sequence (zero-indexed).
+
+```yaml
+# Python → C: "import os" → "#include <os.h>"
+# tokens[0]=import  tokens[1]=whitespace  tokens[2]=os
+- match:
+    sequence:
+      - { type: keyword, value: "import" }
+      - type: whitespace
+      - type: identifier
+  emit:
+    type: preprocessor
+    value: "#include <{{tokens[2].value}}.h>"
+
+# Rust: qualify an identifier with its crate path
+- match:
+    type: identifier
+    preceded_by: { type: keyword, value: "use" }
+  emit:
+    value: "crate::{{value}}"
+```
+
+#### `value_regex` — transform the value with a regex substitution
+
+Use `value_regex` with `pattern` and `replacement` to apply a regex substitution to the token's original value. If the pattern does not match, the value is passed through unchanged.
+
+```yaml
+# Python single-quoted strings → C double-quoted strings: 'hello' → "hello"
+- match:
+    type: string_literal
+  emit:
+    value_regex:
+      pattern: "^'(.*)'$"
+      replacement: '"\\1"'
+
+# Python comments → C++ line comments: "# text" → "// text"
+- match:
+    type: comment
+  emit:
+    value_regex:
+      pattern: "^#"
+      replacement: "//"
+```
+
+---
+
 ### Rule priority (complete)
 
 Rules are tried in this order — the first match wins:
@@ -376,8 +485,8 @@ Rules are tried in this order — the first match wins:
 | Priority | Rule type | When it applies |
 |---|---|---|
 | 1 | Sequence rule | `match: sequence: [...]` — matches multiple tokens |
-| 2 | Context-aware + specific | type + value + `preceded_by` and/or `followed_by` |
-| 3 | Context-aware + general | type only + `preceded_by` and/or `followed_by` |
+| 2 | Context-aware + specific | type + value + any of `preceded_by`, `followed_by`, `not_preceded_by`, `not_followed_by` |
+| 3 | Context-aware + general | type only + any context condition |
 | 4 | Specific | type + value |
 | 5 | General | type only |
 
@@ -416,6 +525,8 @@ Because Pyken only cares about the `{type, value}` contract, it works with PyLex
 | Context-aware matching | `preceded_by` / `followed_by` to disambiguate by context | In progress |
 | Sequence matching | Match N consecutive tokens as a pattern, emit as one | In progress |
 | Token injection | `emit: before` / `emit: after` to add tokens without removing the original | In progress |
+| Negative context matching | `not_preceded_by` / `not_followed_by` to exclude rules by adjacent token | In progress |
+| Value transforms | `{{value}}` interpolation and `value_regex` substitution in emit | In progress |
 | Custom output language | Define a new language target from scratch | Planned |
 
 ---
