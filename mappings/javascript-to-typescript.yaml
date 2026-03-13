@@ -1,0 +1,32 @@
+from: javascript
+to: typescript
+rules:
+  - match:
+      type: keyword
+      value: "var"
+    emit:
+      value: "let"
+  - match:
+      type: keyword
+    emit: pass
+  - match:
+      type: identifier
+    emit: pass
+  - match:
+      type: whitespace
+    emit: pass
+  - match:
+      type: operator
+    emit: pass
+  - match:
+      type: string_literal
+    emit: pass
+  - match:
+      type: punctuator
+    emit: pass
+  - match:
+      type: number
+    emit: pass
+  - match:
+      type: comment
+    emit: pass

@@ -1,0 +1,87 @@
+from: python
+to: pseudocode
+rules:
+  - match:
+      type: keyword
+      value: "def"
+    emit:
+      value: "FUNCTION"
+  - match:
+      type: keyword
+      value: "if"
+    emit:
+      value: "IF"
+  - match:
+      type: keyword
+      value: "else"
+    emit:
+      value: "ELSE"
+  - match:
+      type: keyword
+      value: "elif"
+    emit:
+      value: "ELSE IF"
+  - match:
+      type: keyword
+      value: "for"
+    emit:
+      value: "FOR EACH"
+  - match:
+      type: keyword
+      value: "while"
+    emit:
+      value: "WHILE"
+  - match:
+      type: keyword
+      value: "return"
+    emit:
+      value: "RETURN"
+  - match:
+      type: keyword
+      value: "import"
+    emit:
+      value: "REQUIRE"
+  - match:
+      type: keyword
+      value: "True"
+    emit:
+      value: "YES"
+  - match:
+      type: keyword
+      value: "False"
+    emit:
+      value: "NO"
+  - match:
+      type: keyword
+      value: "None"
+    emit:
+      value: "NOTHING"
+  - match:
+      type: keyword
+      value: "print"
+    emit:
+      value: "OUTPUT"
+  - match:
+      type: keyword
+    emit: pass
+  - match:
+      type: identifier
+    emit: pass
+  - match:
+      type: whitespace
+    emit: pass
+  - match:
+      type: operator
+    emit: pass
+  - match:
+      type: string_literal
+    emit: pass
+  - match:
+      type: punctuator
+    emit: pass
+  - match:
+      type: number
+    emit: pass
+  - match:
+      type: comment
+    emit: pass

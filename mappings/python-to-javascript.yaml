@@ -1,0 +1,72 @@
+from: python
+to: javascript
+rules:
+  - match:
+      type: keyword
+      value: "def"
+    emit:
+      value: "function"
+  - match:
+      type: keyword
+      value: "elif"
+    emit:
+      value: "else if"
+  - match:
+      type: keyword
+      value: "True"
+    emit:
+      value: "true"
+  - match:
+      type: keyword
+      value: "False"
+    emit:
+      value: "false"
+  - match:
+      type: keyword
+      value: "None"
+    emit:
+      value: "null"
+  - match:
+      type: keyword
+      value: "and"
+    emit:
+      value: "&&"
+  - match:
+      type: keyword
+      value: "or"
+    emit:
+      value: "||"
+  - match:
+      type: keyword
+      value: "not"
+    emit:
+      value: "!"
+  - match:
+      type: keyword
+      value: "print"
+    emit:
+      value: "console.log"
+  - match:
+      type: keyword
+    emit: pass
+  - match:
+      type: identifier
+    emit: pass
+  - match:
+      type: whitespace
+    emit: pass
+  - match:
+      type: operator
+    emit: pass
+  - match:
+      type: string_literal
+    emit: pass
+  - match:
+      type: punctuator
+    emit: pass
+  - match:
+      type: number
+    emit: pass
+  - match:
+      type: comment
+    emit: pass
