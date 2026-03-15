@@ -50,3 +50,10 @@ def test_token_stream_valid_json_but_not_array_exits_with_error():
     result = run_pyken(MAPPING, input_data='{"type": "keyword", "value": "def"}')
     assert result.returncode != 0
     assert "array" in result.stderr.lower()
+
+
+def test_empty_token_stream_produces_empty_output():
+    """Scenario: Empty token stream produces empty output"""
+    result = run_pyken(MAPPING, input_data='[]')
+    assert result.returncode == 0
+    assert result.stdout == ''
