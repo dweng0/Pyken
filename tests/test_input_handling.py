@@ -43,3 +43,10 @@ def test_invalid_json_input_exits_with_a_clear_error():
     result = run_pyken(MAPPING, input_data="not valid json {{{")
     assert result.returncode != 0
     assert "JSON" in result.stderr or "json" in result.stderr.lower()
+
+
+def test_token_stream_valid_json_but_not_array_exits_with_error():
+    """Scenario: Token stream that is valid JSON but not an array exits with a clear error"""
+    result = run_pyken(MAPPING, input_data='{"type": "keyword", "value": "def"}')
+    assert result.returncode != 0
+    assert "array" in result.stderr.lower()

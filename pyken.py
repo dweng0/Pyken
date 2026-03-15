@@ -40,6 +40,11 @@ def main():
         print(f"Error: input file not found: {args.input}", file=sys.stderr)
         sys.exit(1)
 
+    # Validate that tokens is an array
+    if not isinstance(tokens, list):
+        print("Error: token stream must be a JSON array", file=sys.stderr)
+        sys.exit(1)
+
     # Apply mapping
     new_tokens, warnings = apply_mapping(tokens, rules, strict=args.strict)
 
