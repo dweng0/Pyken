@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 13 test file(s).
+Checked 68 scenario(s) across 14 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -47,15 +47,15 @@ Checked 68 scenario(s) across 13 test file(s).
 ## Feature: Multi-token emission
 
 - [x] A single matched token emits multiple tokens in token stream output
-- [x] Multi-token emission appears correctly in reconstructed source text
+- [ ] UNCOVERED: Multi-token emission appears correctly in reconstructed source text
 
 ## Feature: Context-aware matching
 
 - [x] A token is matched by type, value, and preceding token type and value
-- [x] Context-aware rules take priority over context-free rules for the same token
-- [x] Context-free rule applies when context does not match
-- [x] preceded_by does not match when the token is first in the stream
-- [x] preceded_by and followed_by can be combined in a single rule
+- [ ] UNCOVERED: Context-aware rules take priority over context-free rules for the same token
+- [ ] UNCOVERED: Context-free rule applies when context does not match
+- [ ] UNCOVERED: preceded_by does not match when the token is first in the stream
+- [ ] UNCOVERED: preceded_by and followed_by can be combined in a single rule
 
 ## Feature: Sequence matching
 
@@ -132,12 +132,16 @@ Checked 68 scenario(s) across 13 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**32/68 scenarios covered.**
+**27/68 scenarios covered.**
 
-36 scenario(s) need tests:
+41 scenario(s) need tests:
 - Python-to-JavaScript mapping remaps def to function
 - JavaScript-to-TypeScript mapping passes through valid tokens
 - Python-to-pseudocode mapping replaces keywords with plain English
+- Multi-token emission appears correctly in reconstructed source text
+- Context-aware rules take priority over context-free rules for the same token
+- Context-free rule applies when context does not match
+- preceded_by does not match when the token is first in the stream
 - preceded_by and followed_by can be combined in a single rule
 - A sequence of tokens is matched and emitted as a single token
 - A sequence of tokens is matched and discarded entirely
