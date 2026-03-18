@@ -2,7 +2,7 @@
 language: python
 framework: none
 build_cmd: python3 -m py_compile pyken.py mapper/mapper.py
-test_cmd: .venv/bin/pytest tests/ -v
+test_cmd: pytest tests/ -v
 lint_cmd: echo 'lint not configured'
 fmt_cmd: echo 'format not configured'
 birth_date: 2026-03-13
