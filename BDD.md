@@ -398,6 +398,89 @@ System: A token stream transformer that accepts a JSON array of typed tokens and
             Then all tokens pass through unchanged
             And a warning is printed for each token
 
+    Feature: Emit mode validation
+        As a developer
+        I want unknown emit string values to be rejected at mapping load time
+        So that typos like emit: "dicard" or emit: "unknown" are caught early instead of producing silent misbehaviour
+
+        Scenario: Unknown emit string is rejected with a clear error
+            Given a mapping file containing a rule with emit set to an unrecognised string value like "unknown"
+            When I run pyken.py with that mapping file and any token stream
+            Then the exit code is non-zero
+            And an error message identifying the invalid emit value is printed to stderr
+
+        Scenario: Valid emit string values are accepted
+            Given a mapping file containing rules using emit: pass and emit: discard
+            When I run pyken.py with that mapping file
+            Then the rules are applied normally without errors
+
+        Scenario: Emit as a dict with unrecognised keys is rejected
+            Given a mapping file containing a rule with emit containing an unrecognised key like frobnicate
+            When I run pyken.py with that mapping file
+            Then the exit code is non-zero
+            And an error message identifying the invalid emit key is printed to stderr
+
+    Feature: Token shape validation
+        As a developer
+        I want tokens missing required fields to be caught before processing
+        So that I get a clear error instead of a crash when the token stream is malformed
+
+        Scenario: Token missing the value key exits with a clear error
+            Given a token stream containing a token object that has a type key but no value key
+            When I run pyken.py with a mapping file
+            Then the exit code is non-zero
+            And an error message identifying the malformed token is printed to stderr
+
+        Scenario: Token missing the type key exits with a clear error
+            Given a token stream containing a token object that has a value key but no type key
+            When I run pyken.py with a mapping file
+            Then the exit code is non-zero
+            And an error message identifying the malformed token is printed to stderr
+
+        Scenario: Token that is not a JSON object exits with a clear error
+            Given a token stream containing a non-object element like a string or number
+            When I run pyken.py with a mapping file
+            Then the exit code is non-zero
+            And an error message identifying the malformed token is printed to stderr
+
+    Feature: Rule matching performance
+        As a developer
+        I want token-to-rule matching to use indexed lookups instead of linear scans
+        So that Pyken remains fast with large mapping files and long token streams
+
+        Scenario: Indexed rule lookup produces the same results as linear scan
+            Given a mapping file with 20 or more rules covering type+value, type-only, and value-only matches
+            And a token stream containing tokens that exercise all three match specificity levels
+            When I run pyken.py
+            Then every token is matched to the same rule that a linear scan would select
+            And the output is correct
+
+    Feature: Shared test utilities
+        As a maintainer
+        I want common test helper functions to live in conftest.py or a shared module
+        So that test files do not duplicate run_pyken and make_mapping_file definitions
+
+        Scenario: Tests import shared helpers instead of redefining them
+            Given the test suite for Pyken
+            When I inspect the test files
+            Then the functions run_pyken and make_mapping_file are each defined in exactly one place
+            And all test files that use them import from that shared location
+
+    Feature: Search tool filtering
+        As a BAADD framework maintainer
+        I want the agent search_files tool to exclude non-source directories
+        So that search results are not polluted by .git, node_modules, or __pycache__ content
+
+        Scenario: search_files excludes .git directory from results
+            Given a project with a .git directory containing files that match a search pattern
+            When the agent runs the search_files tool with that pattern
+            Then no results from .git are included in the output
+
+        Scenario: search_files excludes node_modules and __pycache__ from results
+            Given a project with node_modules or __pycache__ directories containing files that match a search pattern
+            When the agent runs the search_files tool with that pattern
+            Then no results from those directories are included in the output
+
     Feature: CLI error handling
         As a developer
         I want clear error messages when I misuse Pyken
