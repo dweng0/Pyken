@@ -14,6 +14,12 @@ def find_rule(token, rules):
         if 'type' in match and 'value' in match:
             if token.get('type') == match['type'] and token.get('value') == match['value']:
                 return rule
+    # Try value-only match
+    for rule in rules:
+        match = rule.get('match', {})
+        if 'value' in match and 'type' not in match:
+            if token.get('value') == match['value']:
+                return rule
     # Try general match (type only)
     for rule in rules:
         match = rule.get('match', {})
@@ -37,6 +43,9 @@ def apply_mapping(tokens, rules, strict=False):
             emit = rule.get('emit', 'pass')
             if emit == 'pass':
                 new_tokens.append(token)
+            elif emit == 'discard':
+                # Don't add the token to the output, and don't warn about it in strict mode
+                continue
             else:
                 new_token = dict(token)
                 if 'value' in emit:
