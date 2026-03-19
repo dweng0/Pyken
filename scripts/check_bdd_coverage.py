@@ -52,15 +52,17 @@ EXCLUDE_DIRS = {".git", "node_modules", "target", "dist", "build", ".venv", "__p
 def normalize(text):
     """Convert scenario name to searchable form."""
     text = text.lower()
-    text = re.sub(r"[^a-z0-9\s]", "", text)
-    text = re.sub(r"\s+", "_", text.strip())
+    # Preserve dashes, underscores, and spaces as they become underscores in test names
+    text = re.sub(r"[^a-z0-9\s_-]", "", text)
+    # Convert dashes, underscores, and multiple spaces to single underscores
+    text = re.sub(r"[-_\s]+", "_", text.strip())
     return text
 
 
 def normalize_partial(text):
     """First 6 words of scenario name for partial matching."""
     words = text.lower().split()[:6]
-    return " ".join(re.sub(r"[^a-z0-9]", "", w) for w in words if w)
+    return " ".join(re.sub(r"[^a-z0-9_-]", "", w) for w in words if w)
 
 
 def parse_scenarios(bdd_path):
@@ -123,7 +125,8 @@ def check_coverage(scenario_name, test_files, test_contents):
         if partial and partial in content_lower:
             return True
         # Try each word of the scenario (all significant words present)
-        words = [w for w in re.sub(r"[^a-z0-9\s]", "", scenario_name.lower()).split() if len(w) > 3]
+        # Preserve dashes and underscores that might be in test names
+        words = [w for w in re.sub(r"[^a-z0-9-_\s]", "", scenario_name.lower()).split() if len(w) > 3]
         if len(words) >= 3 and all(w in content_lower for w in words[:4]):
             return True
 

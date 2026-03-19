@@ -35,9 +35,9 @@ Checked 68 scenario(s) across 15 test file(s).
 
 ## Feature: Bundled mappings
 
-- [ ] UNCOVERED: Python-to-JavaScript mapping remaps def to function
-- [ ] UNCOVERED: JavaScript-to-TypeScript mapping passes through valid tokens
-- [ ] UNCOVERED: Python-to-pseudocode mapping replaces keywords with plain English
+- [x] Python-to-JavaScript mapping remaps def to function
+- [x] JavaScript-to-TypeScript mapping passes through valid tokens
+- [x] Python-to-pseudocode mapping replaces keywords with plain English
 
 ## Feature: Discard tokens
 
@@ -47,15 +47,15 @@ Checked 68 scenario(s) across 15 test file(s).
 ## Feature: Multi-token emission
 
 - [x] A single matched token emits multiple tokens in token stream output
-- [ ] UNCOVERED: Multi-token emission appears correctly in reconstructed source text
+- [x] Multi-token emission appears correctly in reconstructed source text
 
 ## Feature: Context-aware matching
 
 - [x] A token is matched by type, value, and preceding token type and value
-- [ ] UNCOVERED: Context-aware rules take priority over context-free rules for the same token
-- [ ] UNCOVERED: Context-free rule applies when context does not match
-- [ ] UNCOVERED: preceded_by does not match when the token is first in the stream
-- [ ] UNCOVERED: preceded_by and followed_by can be combined in a single rule
+- [x] Context-aware rules take priority over context-free rules for the same token
+- [x] Context-free rule applies when context does not match
+- [x] preceded_by does not match when the token is first in the stream
+- [x] preceded_by and followed_by can be combined in a single rule
 
 ## Feature: Sequence matching
 
@@ -78,7 +78,7 @@ Checked 68 scenario(s) across 15 test file(s).
 
 - [x] A token is matched by type, value, and following token type and value
 - [ ] UNCOVERED: Lookahead rules take priority over context-free rules for the same token
-- [ ] UNCOVERED: Context-free rule applies when lookahead context does not match
+- [x] Context-free rule applies when lookahead context does not match
 
 ## Feature: Negative context matching
 
@@ -132,17 +132,9 @@ Checked 68 scenario(s) across 15 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**29/68 scenarios covered.**
+**38/68 scenarios covered.**
 
-39 scenario(s) need tests:
-- Python-to-JavaScript mapping remaps def to function
-- JavaScript-to-TypeScript mapping passes through valid tokens
-- Python-to-pseudocode mapping replaces keywords with plain English
-- Multi-token emission appears correctly in reconstructed source text
-- Context-aware rules take priority over context-free rules for the same token
-- Context-free rule applies when context does not match
-- preceded_by does not match when the token is first in the stream
-- preceded_by and followed_by can be combined in a single rule
+30 scenario(s) need tests:
 - A sequence rule takes priority over a single-token rule for the first token in the sequence
 - Single-token rule applies when sequence context is not present
 - Sequence rule does not match when the stream ends before the sequence is complete
@@ -153,7 +145,6 @@ Checked 68 scenario(s) across 15 test file(s).
 - Injection appears correctly in token stream output
 - Injection can be combined with token value replacement
 - Lookahead rules take priority over context-free rules for the same token
-- Context-free rule applies when lookahead context does not match
 - not_followed_by prevents a rule matching when the excluded token follows
 - not_followed_by rule matches when the excluded token is absent
 - not_preceded_by prevents a rule matching when the excluded token precedes
