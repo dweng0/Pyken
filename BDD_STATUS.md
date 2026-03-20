@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 17 test file(s).
+Checked 68 scenario(s) across 18 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -77,15 +77,15 @@ Checked 68 scenario(s) across 17 test file(s).
 ## Feature: Lookahead context matching
 
 - [x] A token is matched by type, value, and following token type and value
-- [ ] UNCOVERED: Lookahead rules take priority over context-free rules for the same token
+- [x] Lookahead rules take priority over context-free rules for the same token
 - [x] Context-free rule applies when lookahead context does not match
 
 ## Feature: Negative context matching
 
-- [ ] UNCOVERED: not_followed_by prevents a rule matching when the excluded token follows
-- [ ] UNCOVERED: not_followed_by rule matches when the excluded token is absent
-- [ ] UNCOVERED: not_preceded_by prevents a rule matching when the excluded token precedes
-- [ ] UNCOVERED: not_preceded_by and not_followed_by can be combined in a single rule
+- [x] not_followed_by prevents a rule matching when the excluded token follows
+- [x] not_followed_by rule matches when the excluded token is absent
+- [x] not_preceded_by prevents a rule matching when the excluded token precedes
+- [x] not_preceded_by and not_followed_by can be combined in a single rule
 
 ## Feature: Value transforms in emit
 
@@ -132,14 +132,9 @@ Checked 68 scenario(s) across 17 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**51/68 scenarios covered.**
+**56/68 scenarios covered.**
 
-17 scenario(s) need tests:
-- Lookahead rules take priority over context-free rules for the same token
-- not_followed_by prevents a rule matching when the excluded token follows
-- not_followed_by rule matches when the excluded token is absent
-- not_preceded_by prevents a rule matching when the excluded token precedes
-- not_preceded_by and not_followed_by can be combined in a single rule
+12 scenario(s) need tests:
 - Rule with an unknown emit mode exits with a clear error
 - Rule missing a match block is skipped with a warning
 - Unknown emit string is rejected with a clear error

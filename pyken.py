@@ -45,6 +45,18 @@ def main():
         print("Error: token stream must be a JSON array", file=sys.stderr)
         sys.exit(1)
 
+    # Validate token shape - each token must be a dict with 'type' and 'value' keys
+    for i, token in enumerate(tokens):
+        if not isinstance(token, dict):
+            print(f"Error: token at index {i} is not a JSON object: got {type(token).__name__}", file=sys.stderr)
+            sys.exit(1)
+        if 'type' not in token:
+            print(f"Error: token at index {i} is missing required 'type' key", file=sys.stderr)
+            sys.exit(1)
+        if 'value' not in token:
+            print(f"Error: token at index {i} is missing required 'value' key", file=sys.stderr)
+            sys.exit(1)
+
     # Apply mapping
     new_tokens, warnings = apply_mapping(tokens, rules, strict=args.strict)
 
