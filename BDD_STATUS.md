@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 16 test file(s).
+Checked 68 scenario(s) across 17 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -91,8 +91,8 @@ Checked 68 scenario(s) across 16 test file(s).
 
 - [x] Emit value interpolates the matched token's original value
 - [x] Emit value interpolates a specific token's value from a matched sequence
-- [ ] UNCOVERED: Emit value_regex applies a substitution pattern to the original token value
-- [ ] UNCOVERED: value_regex with no match leaves the token value unchanged
+- [x] Emit value_regex applies a substitution pattern to the original token value
+- [x] value_regex with no match leaves the token value unchanged
 
 ## Feature: Mapping file validation
 
@@ -132,16 +132,14 @@ Checked 68 scenario(s) across 16 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**49/68 scenarios covered.**
+**51/68 scenarios covered.**
 
-19 scenario(s) need tests:
+17 scenario(s) need tests:
 - Lookahead rules take priority over context-free rules for the same token
 - not_followed_by prevents a rule matching when the excluded token follows
 - not_followed_by rule matches when the excluded token is absent
 - not_preceded_by prevents a rule matching when the excluded token precedes
 - not_preceded_by and not_followed_by can be combined in a single rule
-- Emit value_regex applies a substitution pattern to the original token value
-- value_regex with no match leaves the token value unchanged
 - Rule with an unknown emit mode exits with a clear error
 - Rule missing a match block is skipped with a warning
 - Unknown emit string is rejected with a clear error
