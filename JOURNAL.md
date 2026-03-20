@@ -1,16 +1,33 @@
-## 2026-03-20 00:36 — journal entry
-Session started. Read IDENTITY.md, BDD.md, BDD_STATUS.md, JOURNAL_INDEX.md, ISSUES_TODAY.md.
+# Journal
 
-BDD_STATUS.md shows 38/68 scenarios covered, 30 uncovered. No failing tests. No open issues.
+## 2026-03-20 00:36 — fix value_regex processing in emit
 
-Prioritized uncovered scenarios:
-1. Sequence matching (5 scenarios): sequence priority, context presence, incomplete stream, pass_through, followed_by
-2. Token injection (4 scenarios): after, before, in token stream, with replacement
-3. Negative context (4 scenarios): not_followed_by, not_preceded_by, combined
-4. Value transforms (4 scenarios): interpolation, sequence value, regex, no-match
-5. Mapping validation (3 scenarios): unknown emit mode, missing match block
-6. Emit mode validation (3 scenarios): unknown strings, dict keys
-7. Token shape validation (3 scenarios): missing value, missing type, not object
-8. Performance (1), Shared utilities (1), Search filtering (2)
+Fixed two failing tests in `tests/test_value_regex.py`:
+- `test_emit_value_regex_applies_a_substitution_pattern_to_the_original_token_value`
+- `test_emit_value_regex_with_interpolation`
 
-No existing tests fail. The highest priority work is to implement coverage for the uncovered BDD scenarios.
+The bug was in `mapper/mapper.py` in the `apply_mapping` function. When processing emit rules, the code only checked for `'value'` in the emit dict, but when using `value_regex`, the structure is `{'value_regex': {...}, 'type': ...}`.
+
+Added checks for `'value_regex'` before `'value'` in two places:
+1. Single token emit processing (lines 457-480)
+2. Multi-token emission in list emit (lines 425-442)
+
+The fix ensures `apply_value_regex(emit, token)` is called with the entire emit dict when `value_regex` is present, rather than `emit['value']` which doesn't exist.
+
+All 46 tests now pass.
+
+## Day 2026-03-20 00:36 — fix value_regex processing in emit
+
+Fixed two failing tests in `tests/test_value_regex.py`:
+- `test_emit_value_regex_applies_a_substitution_pattern_to_the_original_token_value`
+- `test_emit_value_regex_with_interpolation`
+
+The bug was in `mapper/mapper.py` in the `apply_mapping` function. When processing emit rules, the code only checked for `'value'` in the emit dict, but when using `value_regex`, the structure is `{'value_regex': {...}, 'type': ...}`.
+
+Added checks for `'value_regex'` before `'value'` in two places:
+1. Single token emit processing (lines 457-480)
+2. Multi-token emission in list emit (lines 425-442)
+
+The fix ensures `apply_value_regex(emit, token)` is called with the entire emit dict when `value_regex` is present, rather than `emit['value']` which doesn't exist.
+
+All 46 tests now pass.
