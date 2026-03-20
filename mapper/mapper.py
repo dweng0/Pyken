@@ -1,10 +1,75 @@
 import yaml
 import sys
+import re
 
 
 def load_mapping(path):
     with open(path, 'r') as f:
         return yaml.safe_load(f)
+
+
+def interpolate_value(value, token, matched_tokens=None, sequence_start_pos=None):
+    """
+    Interpolate {{value}} and {{tokens[N].value}} placeholders in emit values.
+    Returns the interpolated value string.
+    """
+    if not isinstance(value, str):
+        return value
+    
+    result = value
+    
+    # Replace {{value}} with the matched token's value
+    if '{{value}}' in result:
+        result = result.replace('{{value}}', token.get('value', ''))
+    
+    # Replace {{tokens[N].value}} with values from matched sequence tokens
+    # Pattern: {{tokens[0].value}}, {{tokens[1].value}}, etc.
+    token_pattern = re.compile(r'\{\{tokens\[(\d+)\]\.value\}\}')
+    matches = token_pattern.findall(result)
+    for idx_str in matches:
+        idx = int(idx_str)
+        if matched_tokens and sequence_start_pos is not None:
+            actual_idx = sequence_start_pos + idx
+            if 0 <= actual_idx < len(matched_tokens):
+                token_value = matched_tokens[actual_idx].get('value', '')
+                result = result.replace(f'{{{{tokens[{idx}].value}}}}', token_value)
+    
+    return result
+
+
+def apply_value_regex(value, token, matched_tokens=None, sequence_start_pos=None):
+    """
+    Apply value_regex substitution to a value string.
+    Returns the transformed value string.
+    """
+    if not isinstance(value, dict):
+        return value
+    
+    value_regex = value.get('value_regex')
+    if not value_regex:
+        return value
+    
+    pattern = value_regex.get('pattern')
+    replacement = value_regex.get('replacement')
+    
+    if not pattern or not replacement:
+        return value
+    
+    # Get the source value to apply regex to
+    source_value = token.get('value', '')
+    
+    # Interpolate {{value}} in replacement string
+    if '{{value}}' in replacement:
+        replacement = replacement.replace('{{value}}', source_value)
+    
+    # Apply the regex substitution
+    try:
+        result = re.sub(pattern, replacement, source_value)
+    except re.error:
+        # If regex is invalid, return original
+        return value
+    
+    return result
 
 
 def find_rule(token, prev_token, next_token, rules, tokens=None, pos=None):
@@ -250,12 +315,44 @@ def apply_mapping(tokens, rules, strict=False):
                 elif isinstance(emit, list):
                     # Handle multi-token emission
                     for emitted_token in emit:
-                        # For sequence matches, use the first matched token as base
-                        new_token = dict(matched_tokens[0])  # Start with first token properties
+                        # For sequence matches, use the matched_tokens for interpolation
+                        new_token = {}
                         if isinstance(emitted_token, dict):
-                            # Override with properties from the emitted token definition
-                            if 'value' in emitted_token:
-                                new_token['value'] = emitted_token['value']
+                            # Copy base properties from first matched token (or current token)
+                            if matched_tokens:
+                                new_token = dict(matched_tokens[0])
+                            else:
+                                new_token = dict(token)
+                            
+                            # Apply emit definition with value interpolation
+                            # First check if emit contains value_regex
+                            if 'value_regex' in emitted_token:
+                                # value_regex is present - apply it to the matched token
+                                processed_value = apply_value_regex(
+                                    emitted_token,  # Pass the whole emit dict
+                                    matched_tokens[0] if matched_tokens else token,
+                                    matched_tokens,
+                                    i if matched_tokens else None
+                                )
+                                if isinstance(processed_value, str):
+                                    new_token['value'] = interpolate_value(
+                                        processed_value,
+                                        matched_tokens[0] if matched_tokens else token,
+                                        matched_tokens,
+                                        i if matched_tokens else None
+                                    )
+                                else:
+                                    new_token['value'] = processed_value
+                            elif 'value' in emitted_token:
+                                # value is present - use it directly with interpolation
+                                new_token['value'] = interpolate_value(
+                                    emitted_token['value'],
+                                    matched_tokens[0] if matched_tokens else token,
+                                    matched_tokens,
+                                    i if matched_tokens else None
+                                )
+                            if 'type' in emitted_token:
+                                new_token['type'] = emitted_token['type']
                             if 'type' in emitted_token:
                                 new_token['type'] = emitted_token['type']
                             # Add any other fields from the emitted token definition
@@ -268,9 +365,47 @@ def apply_mapping(tokens, rules, strict=False):
                         new_tokens.append(new_token)
                 else:
                     # Single token emission for the entire sequence
-                    new_token = dict(matched_tokens[0])  # Start with first token properties
-                    if 'value' in emit:
-                        new_token['value'] = emit['value']
+                    new_token = {}
+                    if matched_tokens:
+                        new_token = dict(matched_tokens[0])  # Start with first token properties
+                    else:
+                        new_token = dict(token)
+                    
+                    # Handle value_regex first (it produces a string, not a dict)
+                    if 'value_regex' in emit:
+                        processed_value = apply_value_regex(
+                            emit,
+                            matched_tokens[0] if matched_tokens else token,
+                            matched_tokens,
+                            i if matched_tokens else None
+                        )
+                        if isinstance(processed_value, str):
+                            new_token['value'] = interpolate_value(
+                                processed_value,
+                                matched_tokens[0] if matched_tokens else token,
+                                matched_tokens,
+                                i if matched_tokens else None
+                            )
+                        else:
+                            new_token['value'] = processed_value
+                    elif 'value' in emit:
+                        processed_value = apply_value_regex(
+                            emit['value'],
+                            matched_tokens[0] if matched_tokens else token,
+                            matched_tokens,
+                            i if matched_tokens else None
+                        )
+                        # processed_value should be a string from interpolation or direct result
+                        if isinstance(processed_value, str):
+                            new_token['value'] = interpolate_value(
+                                processed_value,
+                                matched_tokens[0] if matched_tokens else token,
+                                matched_tokens,
+                                i if matched_tokens else None
+                            )
+                        else:
+                            new_token['value'] = processed_value
+                    
                     if 'type' in emit:
                         new_token['type'] = emit['type']
                     new_tokens.append(new_token)
@@ -291,8 +426,39 @@ def apply_mapping(tokens, rules, strict=False):
                         new_token = dict(token)  # Start with original token properties
                         if isinstance(emitted_token, dict):
                             # Override with properties from the emitted token definition
-                            if 'value' in emitted_token:
-                                new_token['value'] = emitted_token['value']
+                            # Check for value_regex first
+                            if 'value_regex' in emitted_token:
+                                processed_value = apply_value_regex(
+                                    emitted_token,
+                                    token,
+                                    None,
+                                    None
+                                )
+                                if isinstance(processed_value, str):
+                                    new_token['value'] = interpolate_value(
+                                        processed_value,
+                                        token,
+                                        None,
+                                        None
+                                    )
+                                else:
+                                    new_token['value'] = processed_value
+                            elif 'value' in emitted_token:
+                                processed_value = apply_value_regex(
+                                    emitted_token['value'], 
+                                    token,
+                                    None,
+                                    None
+                                )
+                                if isinstance(processed_value, str):
+                                    new_token['value'] = interpolate_value(
+                                        processed_value,
+                                        token,
+                                        None,
+                                        None
+                                    )
+                                else:
+                                    new_token['value'] = processed_value
                             if 'type' in emitted_token:
                                 new_token['type'] = emitted_token['type']
                             # Add any other fields from the emitted token definition
@@ -305,8 +471,39 @@ def apply_mapping(tokens, rules, strict=False):
                         new_tokens.append(new_token)
                 else:
                     new_token = dict(token)
-                    if 'value' in emit:
-                        new_token['value'] = emit['value']
+                    # Handle value_regex first (it's a dict with 'pattern' and 'replacement')
+                    if 'value_regex' in emit:
+                        processed_value = apply_value_regex(
+                            emit,
+                            token,
+                            None,
+                            None
+                        )
+                        if isinstance(processed_value, str):
+                            new_token['value'] = interpolate_value(
+                                processed_value,
+                                token,
+                                None,
+                                None
+                            )
+                        else:
+                            new_token['value'] = processed_value
+                    elif 'value' in emit:
+                        processed_value = apply_value_regex(
+                            emit['value'],
+                            token,
+                            None,
+                            None
+                        )
+                        if isinstance(processed_value, str):
+                            new_token['value'] = interpolate_value(
+                                processed_value,
+                                token,
+                                None,
+                                None
+                            )
+                        else:
+                            new_token['value'] = processed_value
                     if 'type' in emit:
                         new_token['type'] = emit['type']
                     new_tokens.append(new_token)
