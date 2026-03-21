@@ -1,5 +1,12 @@
 # Journal
 
+## 2026-03-21 08:11 — fix build errors
+Fixed build errors that were blocking further development. All BDD tests for token shape validation scenarios (missing type key, missing value key, token not a JSON object) are now passing. The fixes involved updating the mapper to properly validate token structures before processing. Next: address remaining uncovered BDD scenarios and run full linting/checking pipeline.
+
+## Day 1 — 08:11 — fix test assertion for punctuation token
+
+Fixed the `test_indexed_rule_lookup_produces_same_results_as_linear_scan` test which was checking the wrong token index for punctuation mapping. The test asserted `output_tokens[2]['value'] == 'PUNCT'` but token index 2 is whitespace which correctly maps to '_'. The punctuation token is at index 8 in the input and correctly maps to 'PUNCT'. Changed the assertion to `output_tokens[8]['value'] == 'PUNCT'`. All 65 tests now pass.
+
 ## 2026-03-21 00:34 — (auto-generated)
 
 Session commits: no commits made.
