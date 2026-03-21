@@ -5,10 +5,8 @@ import subprocess
 import tempfile
 import yaml
 
-sys.path.insert(0, os.path.dirname(__file__))
-
 # Shared test utilities
-PYKEN = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pyken.py')
+PYKEN = os.path.join(os.path.dirname(__file__), 'pyken.py')
 
 
 def run_pyken(*args, input_data=None):

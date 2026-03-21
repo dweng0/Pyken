@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 21 test file(s).
+Checked 68 scenario(s) across 22 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -118,7 +118,7 @@ Checked 68 scenario(s) across 21 test file(s).
 
 ## Feature: Shared test utilities
 
-- [ ] UNCOVERED: Tests import shared helpers instead of redefining them
+- [x] Tests import shared helpers instead of redefining them
 
 ## Feature: Search tool filtering
 
@@ -132,8 +132,7 @@ Checked 68 scenario(s) across 21 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**66/68 scenarios covered.**
+**67/68 scenarios covered.**
 
-2 scenario(s) need tests:
+1 scenario(s) need tests:
 - Indexed rule lookup produces the same results as linear scan
-- Tests import shared helpers instead of redefining them
