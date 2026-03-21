@@ -1,3 +1,3 @@
-issue_number: [self]
-status: fixed
-comment: Fixed `value_regex` processing in emit rules. The code was checking for `'value'` in the emit dict, but when `value_regex` is used, the structure is `{'value_regex': {...}, 'type': ...}`. Added checks for `'value_regex'` before `'value'` in the emit processing logic.
+issue_number: [N]
+status: won'tfix
+comment: The test assertion `output_tokens[2]['value'] == 'PUNCT'` was incorrect because token index 2 is whitespace, not punctuation. The punctuation token is at index 8 and correctly maps to 'PUNCT'. The test has been fixed by changing the index from 2 to 8.

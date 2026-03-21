@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 22 test file(s).
+Checked 68 scenario(s) across 23 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -114,7 +114,7 @@ Checked 68 scenario(s) across 22 test file(s).
 
 ## Feature: Rule matching performance
 
-- [ ] UNCOVERED: Indexed rule lookup produces the same results as linear scan
+- [x] Indexed rule lookup produces the same results as linear scan
 
 ## Feature: Shared test utilities
 
@@ -132,7 +132,4 @@ Checked 68 scenario(s) across 22 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**67/68 scenarios covered.**
-
-1 scenario(s) need tests:
-- Indexed rule lookup produces the same results as linear scan
+**68/68 scenarios covered.**
