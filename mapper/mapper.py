@@ -5,7 +5,36 @@ import re
 
 def load_mapping(path):
     with open(path, 'r') as f:
-        return yaml.safe_load(f)
+        mapping = yaml.safe_load(f)
+    
+    # Validate mapping rules
+    if 'rules' in mapping:
+        rules = mapping['rules']
+        for i, rule in enumerate(rules):
+            # Check if rule has a match block
+            if 'match' not in rule:
+                # Rule missing match block - skip with warning (this is handled by pyken.py)
+                continue
+            
+            # Validate emit mode
+            emit = rule.get('emit', 'pass')
+            
+            # Check if emit is a string
+            if isinstance(emit, str):
+                valid_emit_strings = ['pass', 'discard']
+                if emit not in valid_emit_strings:
+                    raise ValueError(f"Unknown emit string value '{emit}' in rule {i}: valid values are {valid_emit_strings}")
+            
+            # Check if emit is a dict
+            elif isinstance(emit, dict):
+                valid_emit_keys = ['value', 'type', 'value_regex']
+                unknown_keys = [k for k in emit.keys() if k not in valid_emit_keys]
+                if unknown_keys:
+                    raise ValueError(f"Unknown emit key(s) '{unknown_keys}' in rule {i}: valid keys are {valid_emit_keys}")
+            
+            # emit could be a string, dict, or list
+    
+    return mapping
 
 
 def interpolate_value(value, token, matched_tokens=None, sequence_start_pos=None):

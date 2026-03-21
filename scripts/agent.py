@@ -286,15 +286,16 @@ def run_tool(name, input_data):
         elif name == "search_files":
             pattern = input_data["pattern"]
             path = input_data.get("path", ".")
+            # Exclude .git, node_modules, __pycache__, and other non-source directories
             result = subprocess.run(
-                ["grep", "-r", "--include=*", "-l", pattern, path],
+                ["grep", "-r", "--include=*", "-l", "--exclude-dir=.git", "--exclude-dir=node_modules", "--exclude-dir=__pycache__", pattern, path],
                 capture_output=True, text=True
             )
             files = result.stdout.strip()
             if not files:
                 return f"No files found containing: {pattern}"
             result2 = subprocess.run(
-                ["grep", "-r", "-n", "--include=*", pattern, path],
+                ["grep", "-r", "-n", "--include=*", "--exclude-dir=.git", "--exclude-dir=node_modules", "--exclude-dir=__pycache__", pattern, path],
                 capture_output=True, text=True
             )
             return (files + "\n\nMatching lines:\n" + result2.stdout)[:TOOL_OUTPUT_LIMIT]

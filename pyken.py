@@ -22,6 +22,9 @@ def main():
     except yaml.YAMLError as e:
         print(f"Error: failed to parse YAML mapping file: {e}", file=sys.stderr)
         sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     rules = mapping.get('rules', [])
 

@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 68 scenario(s) across 18 test file(s).
+Checked 68 scenario(s) across 21 test file(s).
 
 
 ## Feature: Accept token stream input
@@ -96,21 +96,21 @@ Checked 68 scenario(s) across 18 test file(s).
 
 ## Feature: Mapping file validation
 
-- [ ] UNCOVERED: Rule with an unknown emit mode exits with a clear error
-- [ ] UNCOVERED: Rule missing a match block is skipped with a warning
+- [x] Rule with an unknown emit mode exits with a clear error
+- [x] Rule missing a match block is skipped with a warning
 - [x] Mapping file with no rules key processes all tokens as unmapped
 
 ## Feature: Emit mode validation
 
-- [ ] UNCOVERED: Unknown emit string is rejected with a clear error
-- [ ] UNCOVERED: Valid emit string values are accepted
-- [ ] UNCOVERED: Emit as a dict with unrecognised keys is rejected
+- [x] Unknown emit string is rejected with a clear error
+- [x] Valid emit string values are accepted
+- [x] Emit as a dict with unrecognised keys is rejected
 
 ## Feature: Token shape validation
 
-- [ ] UNCOVERED: Token missing the value key exits with a clear error
-- [ ] UNCOVERED: Token missing the type key exits with a clear error
-- [ ] UNCOVERED: Token that is not a JSON object exits with a clear error
+- [x] Token missing the value key exits with a clear error
+- [x] Token missing the type key exits with a clear error
+- [x] Token that is not a JSON object exits with a clear error
 
 ## Feature: Rule matching performance
 
@@ -122,8 +122,8 @@ Checked 68 scenario(s) across 18 test file(s).
 
 ## Feature: Search tool filtering
 
-- [ ] UNCOVERED: search_files excludes .git directory from results
-- [ ] UNCOVERED: search_files excludes node_modules and __pycache__ from results
+- [x] search_files excludes .git directory from results
+- [x] search_files excludes node_modules and __pycache__ from results
 
 ## Feature: CLI error handling
 
@@ -132,18 +132,8 @@ Checked 68 scenario(s) across 18 test file(s).
 - [x] Invalid YAML mapping file exits with a clear error
 
 ---
-**56/68 scenarios covered.**
+**66/68 scenarios covered.**
 
-12 scenario(s) need tests:
-- Rule with an unknown emit mode exits with a clear error
-- Rule missing a match block is skipped with a warning
-- Unknown emit string is rejected with a clear error
-- Valid emit string values are accepted
-- Emit as a dict with unrecognised keys is rejected
-- Token missing the value key exits with a clear error
-- Token missing the type key exits with a clear error
-- Token that is not a JSON object exits with a clear error
+2 scenario(s) need tests:
 - Indexed rule lookup produces the same results as linear scan
 - Tests import shared helpers instead of redefining them
-- search_files excludes .git directory from results
-- search_files excludes node_modules and __pycache__ from results
